@@ -22,8 +22,7 @@ func main() {
 	c.Print("Welcome to Ghulp. My little Github clone helper")
 	fmt.Println("  🦖🦖🦖")
 
-	green := color.New(color.FgGreen)
-	bold := green.Add(color.Bold)
+	bold := color.New(color.FgGreen).Add(color.Bold)
 
 	rc := color.New(color.FgRed)
 	red := rc.Add(color.Bold)
@@ -65,12 +64,10 @@ func main() {
 
 	logrus.Println("Cloning: ", results[i].CloneURL)
 	cmd := exec.Command("git", "clone", results[i].CloneURL)
-	_, err = cmd.Output()
-	if err != nil {
+	if _, err = cmd.Output(); err != nil {
 		red.Println(err)
 		return
 	}
-
 	fmt.Println("✅  Cloned ✅  ")
 
 }
@@ -89,8 +86,6 @@ func getRepoList(url string) (results []Repo, err error) {
 	body, err := ioutil.ReadAll(resp.Body)
 	results = make([]Repo, 0)
 	err = json.Unmarshal(body, &results)
-	if err != nil {
-	}
 	return
 
 }
