@@ -14,44 +14,22 @@ import (
 	"strings"
 )
 
+var bold = color.New(color.FgGreen).Add(color.Bold)
+var red = color.New(color.FgRed).Add(color.Bold)
+
 func main() {
 
-	// Create a new color object
-	c := color.New(color.FgCyan).Add(color.Underline)
-	fmt.Print("🦖🦖🦖  ")
-	c.Print("Welcome to Ghulp. My little Github clone helper")
-	fmt.Println("  🦖🦖🦖")
+	welcome()
+	repo := getRepoOrPanic()
 
-	bold := color.New(color.FgGreen).Add(color.Bold)
-
-	rc := color.New(color.FgRed)
-	red := rc.Add(color.Bold)
-
-	a := os.Args
-	if len(a) != 2 {
-		red.Println("Expected 2 arguments - the github user, got,", len(a))
-		for _, ai := range os.Args {
-			red.Println(ai)
-		}
-		return
-	}
-
-	url := fmt.Sprint("https://api.github.com/users/", a[1], "/repos")
-	results, err := getRepoList(url)
-	if err != nil {
-		red.Println("Could not get users repos")
-		return
-	}
-
-	for idx, r := range results {
+	url := fmt.Sprint("https://api.github.com/users/", repo, "/repos")
+	results := getRepoListOrPanic(url)
+	for idx, r := range getRepoListOrPanic(url) {
 		bold.Println(fmt.Sprintf("[%v] - %s", idx, r.Name))
 	}
 	bold.Println("[x]", " - Exit")
 
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("Enter text: ")
-	text, _ := reader.ReadString('\n')
-	text = strings.ReplaceAll(text, "\n", "")
+	text := blockForInput()
 	if text == "x" {
 		return
 	}
@@ -72,20 +50,57 @@ func main() {
 
 }
 
+func blockForInput() string {
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("Enter text: ")
+	text, _ := reader.ReadString('\n')
+	text = strings.ReplaceAll(text, "\n", "")
+	return text
+}
+
+func getRepoOrPanic() string {
+	a := os.Args
+	if len(a) != 2 {
+		red.Println("Expected 2 arguments - the github user, got,", len(a))
+		for _, ai := range os.Args {
+			red.Println(ai)
+		}
+		panic("Expected args")
+	}
+	return a[1]
+}
+
+func welcome() {
+	// Create a new color object
+	c := color.New(color.FgCyan).Add(color.Underline)
+	fmt.Print("🦖🦖🦖  ")
+	c.Print("Welcome to Ghulp. My little Github clone helper")
+	fmt.Println("  🦖🦖🦖")
+
+}
+
 type Repo struct {
 	Name     string `json:"name"`
 	CloneURL string `json:"clone_url"`
 }
 
-func getRepoList(url string) (results []Repo, err error) {
+func getRepoListOrPanic(url string) []Repo {
 	resp, err := http.Get(url)
 	if err != nil {
-		return
+		red.Println(err)
+		panic(err)
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
-	results = make([]Repo, 0)
-	err = json.Unmarshal(body, &results)
-	return
+	if err != nil {
+		red.Println(err)
+		panic(err)
+	}
+	results := make([]Repo, 0)
+	if err = json.Unmarshal(body, &results); err != nil {
+		red.Println(err)
+		panic(err)
+	}
+	return results
 
 }
