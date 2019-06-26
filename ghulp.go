@@ -71,7 +71,7 @@ func main() {
 		return
 	}
 
-	fmt.Println("✅ Cloned ✅  ", )
+	fmt.Println("✅  Cloned ✅  ")
 
 }
 
