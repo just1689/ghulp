@@ -62,6 +62,7 @@ func showLoading() chan bool {
 			select {
 			case <-c:
 				fmt.Println("")
+				close(c)
 				return
 			case <-time.After(500 * time.Millisecond):
 				fmt.Print("🦖")
