@@ -12,6 +12,7 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"time"
 )
 
 var bold = color.New(color.FgGreen).Add(color.Bold)
@@ -41,13 +42,33 @@ func main() {
 	}
 
 	logrus.Println("Cloning: ", results[i].CloneURL)
+	done := showLoading()
 	cmd := exec.Command("git", "clone", results[i].CloneURL)
 	if _, err = cmd.Output(); err != nil {
 		red.Println(err)
+		done <- true
 		return
 	}
+	done <- true
 	fmt.Println("✅  Cloned ✅  ")
+	os.Exit(0)
+}
 
+func showLoading() chan bool {
+	c := make(chan bool)
+	go func() {
+		fmt.Println("")
+		for {
+			select {
+			case <-c:
+				fmt.Println("")
+				return
+			case <-time.After(500 * time.Millisecond):
+				fmt.Print("🦖")
+			}
+		}
+	}()
+	return c
 }
 
 func blockForInput() string {
